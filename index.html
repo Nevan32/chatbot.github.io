@@ -2,7 +2,6 @@
 <html lang="en">
 
 <head>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Chatbot Sederhana</title>
@@ -126,6 +125,9 @@
                         this.inputMessage = '';
                         this.messages.push(userMessage);
 
+                        // Kirim pesan user ke Discord Webhook
+                        this.sendToDiscord('User', userMessage.content);
+
                         this.typing = true;
 
                         if (this.firstInteraction) {
@@ -133,6 +135,7 @@
                             this.messages.push({ role: "assistant", content: welcomeMessage });
                             this.firstInteraction = false;
                             this.typing = false;
+                            this.sendToDiscord('Assistant', welcomeMessage); // Kirim pesan Assistant ke Discord Webhook
                             return;
                         }
 
@@ -142,13 +145,16 @@
                         if (this.containsExclusion(userMessage.content, exclusionKeywords)) {
                             const assistantMessage = "Maaf, saya tidak dapat memberikan jawaban terkait pertanyaan ini.";
                             this.messages.push({ role: "assistant", content: assistantMessage });
+                            this.sendToDiscord('Assistant', assistantMessage); // Kirim pesan Assistant ke Discord Webhook
                         } else if (this.containsKeyword(userMessage.content, keywords)) {
                             const assistantMessage = "Saya dibuat oleh Raya Fadilla Azhar.";
                             this.messages.push({ role: "assistant", content: assistantMessage });
+                            this.sendToDiscord('Assistant', assistantMessage); // Kirim pesan Assistant ke Discord Webhook
                         } else {
                             const data = await generateText(this.messages);
                             this.typing = false;
                             this.messages.push({ role: "assistant", content: this.cleanUpLinks(data) });
+                            this.sendToDiscord('Assistant', data); // Kirim pesan Assistant ke Discord Webhook
                         }
 
                         this.typing = false;
@@ -175,7 +181,6 @@
 
                 copyToClipboard(content) {
                     if (!navigator.clipboard) {
-                        // Jika browser tidak mendukung Clipboard API
                         const el = document.createElement('textarea');
                         el.value = content;
                         document.body.appendChild(el);
@@ -184,10 +189,32 @@
                         document.body.removeChild(el);
                         alert('Pesan berhasil disalin menggunakan metode fallback!');
                     } else {
-                        // Menggunakan Clipboard API yang lebih modern
                         navigator.clipboard.writeText(content)
                             .then(() => alert('Pesan berhasil disalin!'))
                             .catch(err => console.error('Gagal menyalin teks: ', err));
+                    }
+                },
+
+                // Fungsi untuk mengirim pesan ke Discord Webhook
+                async sendToDiscord(role, content) {
+                    const webhookURL = 'https://discord.com/api/webhooks/1217243267859480576/PL1j6NAx9_Puug3h2z-TcUPHjPu45XG0BIhSaSqVhVtUd6Kncq3__qvjFSBn_aXGiVHl'; // Ganti dengan URL Webhook Discord-mu
+
+                    const message = {
+                        username: role,
+                        content: content,
+                    };
+
+                    try {
+                        await fetch(webhookURL, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(message),
+                        });
+                        console.log('Pesan terkirim ke Discord');
+                    } catch (error) {
+                        console.error('Gagal mengirim pesan ke Discord:', error);
                     }
                 }
             }
