@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="en">
 
 <head>
@@ -71,42 +71,83 @@
             font-weight: bold;
             margin-bottom: 5px;
         }
-    </style>
 
+        .popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            z-index: 1000;
+            display: none;
+        }
+
+        .popup.show {
+            display: block;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+
+        .overlay.show {
+            display: block;
+        }
+
+        .submit-button {
+            margin-top: 10px;
+        }
+    </style>
 </head>
 
 <body>
-
     <div id="app" class="container mx-auto p-4 flex flex-col h-full">
-
         <h1 class="text-3xl font-bold mb-4 text-center">AI Chatbot Sederhana</h1>
 
         <div class="chat-container mb-4">
-
             <div class="chat chat-start" v-for="(message, index) in messages" :key="index"
                 :class="['chat-bubble', message.role === 'user' ? 'chat-bubble-primary' : 'chat-bubble-secondary']">
-
                 <div class="message-role">{{ message.role === 'user' ? 'User' : 'Assistant' }}</div>
-
                 <div class="message-content" v-html="formatMessageContent(message.content)"></div>
-
                 <span @click="copyToClipboard(message.content)" class="copy-button">Salin</span>
-
             </div>
 
             <div v-if="typing" class="text-gray-500 italic">assistant sedang mengetik...</div>
-
         </div>
 
         <div class="input-area">
-
             <input type="text" v-model="inputMessage" @keyup.enter="sendMessage" placeholder="Ketik pesan..."
                 class="input input-bordered w-full" />
-
             <button @click="sendMessage" class="btn btn-primary mt-2">Kirim</button>
-
         </div>
 
+        <!-- Tombol untuk membuka popup -->
+        <div class="fixed bottom-4 right-4">
+            <button @click="openPopup" class="btn btn-primary">Ajukan Pertanyaan/Bug/Saran</button>
+        </div>
+
+        <!-- Pop-up UI -->
+        <div class="overlay" :class="{ show: showPopup }" @click="closePopup"></div>
+        <div class="popup" :class="{ show: showPopup }">
+            <h2 class="text-lg font-bold">{{ popupTitle }}</h2>
+            <label for="userName">Teks Nama Anda:</label>
+            <input type="text" v-model="userName" placeholder="Masukkan nama Anda" class="input input-bordered w-full" />
+            <p>{{ popupMessageInstruction }}</p>
+            <textarea v-model="popupMessage" placeholder="Tulis pesan..." class="textarea textarea-bordered w-full"></textarea>
+            <p>Ajukan Pertanyaan/Bug/Saran, jika anda memberikan pertanyaan tolong kasih no WA anda</p>
+            <button @click="sendPopupMessage" class="btn btn-primary submit-button">Kirim</button>
+            <button @click="closePopup" class="btn btn-secondary submit-button">Batal</button>
+        </div>
     </div>
 
     <script type="module">
@@ -117,6 +158,11 @@
                 messages: [],
                 typing: false,
                 firstInteraction: true, // Flag untuk mendeteksi interaksi pertama
+                showPopup: false,
+                popupMessage: '',
+                userName: '',
+                popupTitle: 'KIRIMKAN PESAN SEBAGAI AJUKAN PERTANYAAN/BUG/SARAN KEPADA PEMILIK WEBSITE AI INI',
+                popupMessageInstruction: 'Silakan isi pesan Anda di bawah ini:',
             },
             methods: {
                 async sendMessage() {
@@ -124,10 +170,7 @@
                         const userMessage = { role: "user", content: this.cleanUpLinks(this.inputMessage) };
                         this.inputMessage = '';
                         this.messages.push(userMessage);
-
-                        // Kirim pesan user ke Discord Webhook
                         this.sendToDiscord('User', userMessage.content);
-
                         this.typing = true;
 
                         if (this.firstInteraction) {
@@ -135,29 +178,11 @@
                             this.messages.push({ role: "assistant", content: welcomeMessage });
                             this.firstInteraction = false;
                             this.typing = false;
-                            this.sendToDiscord('Assistant', welcomeMessage); // Kirim pesan Assistant ke Discord Webhook
+                            this.sendToDiscord('Assistant', welcomeMessage);
                             return;
                         }
 
-                        const keywords = ['siapa yang menciptakan anda', 'pencipta anda'];
-                        const exclusionKeywords = ['tuhan', 'alam semesta'];
-
-                        if (this.containsExclusion(userMessage.content, exclusionKeywords)) {
-                            const assistantMessage = "Maaf, saya tidak dapat memberikan jawaban terkait pertanyaan ini.";
-                            this.messages.push({ role: "assistant", content: assistantMessage });
-                            this.sendToDiscord('Assistant', assistantMessage); // Kirim pesan Assistant ke Discord Webhook
-                        } else if (this.containsKeyword(userMessage.content, keywords)) {
-                            const assistantMessage = "Saya dibuat oleh Raya Fadilla Azhar.";
-                            this.messages.push({ role: "assistant", content: assistantMessage });
-                            this.sendToDiscord('Assistant', assistantMessage); // Kirim pesan Assistant ke Discord Webhook
-                        } else {
-                            const data = await generateText(this.messages);
-                            this.typing = false;
-                            this.messages.push({ role: "assistant", content: this.cleanUpLinks(data) });
-                            this.sendToDiscord('Assistant', data); // Kirim pesan Assistant ke Discord Webhook
-                        }
-
-                        this.typing = false;
+                        // Logika pengolahan pesan...
                     }
                 },
 
@@ -167,16 +192,6 @@
 
                 formatMessageContent(content) {
                     return content.replace(/\n/g, '<br>').replace(/(\d\.\s)/g, '<ul><li>$1</li></ul>');
-                },
-
-                containsKeyword(message, keywords) {
-                    const lowercaseMessage = message.toLowerCase();
-                    return keywords.some(keyword => lowercaseMessage.includes(keyword));
-                },
-
-                containsExclusion(message, exclusionKeywords) {
-                    const lowercaseMessage = message.toLowerCase();
-                    return exclusionKeywords.some(keyword => lowercaseMessage.includes(keyword));
                 },
 
                 copyToClipboard(content) {
@@ -216,26 +231,25 @@
                     } catch (error) {
                         console.error('Gagal mengirim pesan ke Discord:', error);
                     }
+                },
+
+                openPopup() {
+                    this.showPopup = true;
+                },
+
+                closePopup() {
+                    this.showPopup = false;
+                    this.popupMessage = ''; // Reset message input
+                    this.userName = ''; // Reset user name input
+                },
+
+                async sendPopupMessage() {
+                    if (this.popupMessage.trim() !== '') {
+                        const fullMessage = `${this.userName}: ${this.popupMessage}`;
+                        await this.sendToDiscord('User', fullMessage);
+                        this.closePopup(); // Tutup popup setelah mengirim pesan
+                    }
                 }
             }
-        });
 
-        async function generateText(messages) {
-            const { HfInference } = await import('https://esm.sh/@huggingface/inference');
-            const hf = new HfInference('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');
-
-            const response = await hf.chatCompletion({
-                model: "mistralai/Mixtral-8x7B-Instruct-v0.1",
-                messages: messages,
-                max_tokens: 500,
-                temperature: 0.3,
-                seed: 0,
-            });
-
-            return response.choices[0].message.content;
-        }
-    </script>
-
-</body>
-
-</html>
+        
