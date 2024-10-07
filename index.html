@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>  
 
 <html lang="en">
 
@@ -156,8 +156,6 @@
 
 
 
-        <!-- Tambahkan tombol di sini -->
-
         <div class="text-center mb-4">
 
             <a href="https://nevan32.github.io/chatbotforlaporanbugorsaran.github.io/" target="_blank">
@@ -178,9 +176,15 @@
 
                 <div class="message-content" v-html="formatMessageContent(message.content)"></div>
 
-                <span @click="copyToClipboard(message.content)" class="copy-button">Salin</span>
+                
+
+                <!-- Tombol untuk menyalin pesan -->
+
+                <button @click="copyToClipboard(message.content)" class="btn bg-blue-500 hover:bg-blue-700 text-white mt-2">SALIN PESAN INI</button>
 
             </div>
+
+
 
             <div v-if="typing" class="text-gray-500 italic">assistant sedang mengetik...</div>
 
@@ -230,13 +234,11 @@
 
                         this.messages.push(userMessage);
 
-                        
+
 
                         // Kirim pesan user ke Discord Webhook
 
                         this.sendToDiscord('User', userMessage.content);
-
-
 
                         this.typing = true;
 
@@ -244,7 +246,7 @@
 
                         if (this.firstInteraction) {
 
-                            const welcomeMessage = "Halo Selamat Datang di website ChatGPT versi buatan Raya, Website Ai ini diciptakan oleh Raya Fadilla Azhar, Jika terjadi bug atau ada saran & pertanyaan silahkan Pencet Tombol 'LAPORKAN BUG/SARAN/PERTANYAAN DISINI'. Terima kasih, selamat menggunakan website ai ini ya.";
+                            const welcomeMessage = "Halo Selamat Datang di website ChatGPT versi buatan Raya, Website Ai ini diciptakan oleh Raya Fadilla Azhar, Jika terjadi bug atau ada saran & pertanyaan silahkan Pencet Tombol 'LAPORKAN BUG/SARAN/PERTANYAAN DISINI'atau WhatsApp saya kalau anda punya nomor saya. Terima kasih, selamat menggunakan website ai ini ya.";
 
                             this.messages.push({ role: "assistant", content: welcomeMessage });
 
@@ -260,15 +262,13 @@
 
 
 
-                        // Hapus pemeriksaan keyword dan panggil API langsung untuk menghasilkan balasan
-
                         const data = await generateText(this.messages);
 
                         this.typing = false;
 
                         this.messages.push({ role: "assistant", content: this.cleanUpLinks(data) });
 
-                        this.sendToDiscord('Assistant', data); // Kirim pesan Assistant ke Discord Webhook
+                        this.sendToDiscord('Assistant', data);
 
                         this.typing = false;
 
@@ -276,23 +276,17 @@
 
                 },
 
-
-
                 cleanUpLinks(message) {
 
                     return message.replace(/(https?:\/\/[^\s]+)\s+/g, '$1').replace(/\s+(com|org|net|id|co)/g, '$1');
 
                 },
 
-
-
                 formatMessageContent(content) {
 
                     return content.replace(/\n/g, '<br>').replace(/(\d\.\s)/g, '<ul><li>$1</li></ul>');
 
                 },
-
-
 
                 copyToClipboard(content) {
 
@@ -323,8 +317,6 @@
                     }
 
                 },
-
-
 
                 async sendToDiscord(role, content) {
 
