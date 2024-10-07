@@ -1,7 +1,5 @@
 <!DOCTYPE html>
-
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -123,41 +121,51 @@
                             files: this.files // Sertakan file yang diunggah
                         };
 
+                        // Tambahkan pesan user ke chat
+                        this.messages.push(userMessage);
+
+                        // Reset input
                         this.inputMessage = '';
                         this.files = []; // Kosongkan file setelah dikirim
 
-                        this.messages.push(userMessage);
-
-                        // Mengirim file ke server atau melakukan aksi lain
-                        if (userMessage.files.length > 0) {
-                            this.sendFilesToServer(userMessage.files);
-                        }
-
-                        // Kirim pesan teks ke Discord Webhook
-                        this.sendToDiscord('User', userMessage.content);
-
                         this.typing = true;
 
-                        // Penanganan interaksi pertama
-                        if (this.firstInteraction) {
-                            const welcomeMessage = "Halo Selamat Datang di website ChatGPT versi buatan Raya, Orang yang menciptakan Website Ai ini adalah Raya Fadilla Azhar, Jika terjadi bug atau ada saran & pertanyaan silahkan WhatsApp Nomor Ini 0838-3232-5363, Website ini ter-inspirasi oleh ChatGPT https://chatgpt.com/ itu aja, terima kasih, selamat menggunakan website ai ini ya.";
-                            this.messages.push({ role: "assistant", content: welcomeMessage });
-                            this.firstInteraction = false;
+                        // Proses mengirim pesan dan file
+                        try {
+                            if (userMessage.files.length > 0) {
+                                await this.sendFilesToServer(userMessage.files);
+                            }
+
+                            // Mengirim pesan teks ke Discord Webhook
+                            this.sendToDiscord('User', userMessage.content);
+
+                            // Tangani interaksi pertama
+                            if (this.firstInteraction) {
+                                const welcomeMessage = "Halo Selamat Datang di website ChatGPT versi buatan Raya...";
+                                this.messages.push({ role: "assistant", content: welcomeMessage });
+                                this.firstInteraction = false;
+                                this.typing = false;
+                                this.sendToDiscord('Assistant', welcomeMessage);
+                                return;
+                            }
+
+                            const data = await generateText(this.messages);
+
                             this.typing = false;
-                            this.sendToDiscord('Assistant', welcomeMessage);
-                            return;
+                            this.messages.push({ role: "assistant", content: this.cleanUpLinks(data) });
+                            this.sendToDiscord('Assistant', data);
+
+                        } catch (error) {
+                            console.error("Error while sending message or files:", error);
                         }
-
-                        const data = await generateText(this.messages);
-
-                        this.typing = false;
-                        this.messages.push({ role: "assistant", content: this.cleanUpLinks(data) });
-                        this.sendToDiscord('Assistant', data);
+                    } else {
+                        console.warn("Tidak ada pesan atau file yang dikirim.");
                     }
                 },
 
                 handleFileUpload(event) {
                     this.files = Array.from(event.target.files);
+                    console.log("Files selected: ", this.files);
                 },
 
                 async sendFilesToServer(files) {
@@ -233,10 +241,5 @@
                 max_tokens: 500,
                 temperature: 0.3,
                 seed: 0,
-            });
-            return response.choices[0].message.content;
-        }
-    </script>
-</body>
 
-</html>
+        
