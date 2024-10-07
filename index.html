@@ -2,480 +2,241 @@
 
 <html lang="en">
 
-
-
 <head>
-
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>AI Chatbot Sederhana</title>
-
     <link href="https://cdn.jsdelivr.net/npm/daisyui@3.9.4/dist/full.css" rel="stylesheet" type="text/css" />
-
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
-
     <script src="https://cdn.tailwindcss.com"></script>
 
-
-
     <style>
-
         body {
-
             background-color: #f8fafc;
-
             font-family: 'Arial', sans-serif;
-
             margin: 0;
-
             height: 100vh;
-
             display: flex;
-
             flex-direction: column;
-
         }
-
-
 
         .chat-container {
-
             background: white;
-
             border-radius: 10px;
-
             padding: 20px;
-
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-
             flex: 1;
-
             overflow-y: auto;
-
             margin-bottom: 20px;
-
         }
-
-
 
         .input-area {
-
             margin-top: 20px;
-
         }
-
-
 
         .chat-bubble {
-
             margin-bottom: 10px;
-
             padding: 10px;
-
             border-radius: 10px;
-
         }
-
-
 
         .chat-bubble-primary {
-
             background-color: transparent;
-
             color: black;
-
         }
-
-
 
         .chat-bubble-secondary {
-
             background-color: transparent;
-
             color: black;
-
         }
-
-
 
         .copy-button {
-
             color: blue;
-
             text-decoration: none;
-
             cursor: pointer;
-
         }
-
-
 
         .copy-button:hover {
-
             text-decoration: underline;
-
         }
-
-
 
         .message-content p {
-
             margin-bottom: 0.5em;
-
         }
-
-
 
         .message-content ul {
-
             margin-left: 20px;
-
         }
-
-
 
         .message-role {
-
             font-weight: bold;
-
             margin-bottom: 5px;
-
         }
-
     </style>
-
-
-
 </head>
 
-
-
 <body>
-
-
-
     <div id="app" class="container mx-auto p-4 flex flex-col h-full">
-
-
-
         <h1 class="text-3xl font-bold mb-4 text-center">AI Chatbot Sederhana</h1>
 
-
-
         <div class="chat-container mb-4">
-
-
-
-            <div class="chat chat-start" v-for="(message, index) in messages" :key="index"
-
-                :class="['chat-bubble', message.role === 'user' ? 'chat-bubble-primary' : 'chat-bubble-secondary']">
-
-
-
+            <div class="chat chat-start" v-for="(message, index) in messages" :key="index" :class="['chat-bubble', message.role === 'user' ? 'chat-bubble-primary' : 'chat-bubble-secondary']">
                 <div class="message-role">{{ message.role === 'user' ? 'User' : 'Assistant' }}</div>
-
-
-
-                <div class="message-content" v-html="formatMessageContent(message.content)"></div>
-
-
-
+                <div class="message-content">
+                    <p v-html="formatMessageContent(message.content)"></p>
+                    <!-- Tampilkan file yang diunggah -->
+                    <div v-if="message.files && message.files.length > 0">
+                        <div v-for="(file, index) in message.files" :key="index">
+                            <a :href="URL.createObjectURL(file)" target="_blank">{{ file.name }}</a>
+                        </div>
+                    </div>
+                </div>
                 <span @click="copyToClipboard(message.content)" class="copy-button">Salin</span>
-
-
-
             </div>
 
-
-
             <div v-if="typing" class="text-gray-500 italic">assistant sedang mengetik...</div>
-
-
-
         </div>
-
-
 
         <div class="input-area">
-
-
-
-            <input type="text" v-model="inputMessage" @keyup.enter="sendMessage" placeholder="Ketik pesan..."
-
-                class="input input-bordered w-full" />
-
-
-
+            <input type="file" @change="handleFileUpload" class="input input-bordered w-full mb-2" multiple />
+            <input type="text" v-model="inputMessage" @keyup.enter="sendMessage" placeholder="Ketik pesan..." class="input input-bordered w-full" />
             <button @click="sendMessage" class="btn btn-primary mt-2">Kirim</button>
-
-
-
         </div>
-
-
-
     </div>
 
-
-
     <script type="module">
-
         new Vue({
-
             el: '#app',
-
             data: {
-
                 inputMessage: '',
-
                 messages: [],
-
                 typing: false,
-
-                firstInteraction: true, // Flag untuk mendeteksi interaksi pertama
-
+                files: [], // Menyimpan file yang diunggah
+                firstInteraction: true,
             },
-
             methods: {
-
                 async sendMessage() {
-
-                    if (this.inputMessage.trim() !== '') {
-
-                        const userMessage = { role: "user", content: this.cleanUpLinks(this.inputMessage) };
+                    if (this.inputMessage.trim() !== '' || this.files.length > 0) {
+                        const userMessage = {
+                            role: "user",
+                            content: this.cleanUpLinks(this.inputMessage),
+                            files: this.files // Sertakan file yang diunggah
+                        };
 
                         this.inputMessage = '';
+                        this.files = []; // Kosongkan file setelah dikirim
 
                         this.messages.push(userMessage);
 
+                        // Mengirim file ke server atau melakukan aksi lain
+                        if (userMessage.files.length > 0) {
+                            this.sendFilesToServer(userMessage.files);
+                        }
 
-
-                        // Kirim pesan user ke Discord Webhook
-
+                        // Kirim pesan teks ke Discord Webhook
                         this.sendToDiscord('User', userMessage.content);
-
-
 
                         this.typing = true;
 
-
-
+                        // Penanganan interaksi pertama
                         if (this.firstInteraction) {
-
                             const welcomeMessage = "Halo Selamat Datang di website ChatGPT versi buatan Raya, Orang yang menciptakan Website Ai ini adalah Raya Fadilla Azhar, Jika terjadi bug atau ada saran & pertanyaan silahkan WhatsApp Nomor Ini 0838-3232-5363, Website ini ter-inspirasi oleh ChatGPT https://chatgpt.com/ itu aja, terima kasih, selamat menggunakan website ai ini ya.";
-
                             this.messages.push({ role: "assistant", content: welcomeMessage });
-
                             this.firstInteraction = false;
-
                             this.typing = false;
-
-                            this.sendToDiscord('Assistant', welcomeMessage); // Kirim pesan Assistant ke Discord Webhook
-
+                            this.sendToDiscord('Assistant', welcomeMessage);
                             return;
-
                         }
 
-
-
-                        const keywords = ['siapa yang menciptakan anda', 'pencipta anda'];
-
-                        const exclusionKeywords = ['tuhan', 'alam semesta'];
-
-
-
-                        if (this.containsExclusion(userMessage.content, exclusionKeywords)) {
-
-                            const assistantMessage = "Maaf, saya tidak dapat memberikan jawaban terkait pertanyaan ini.";
-
-                            this.messages.push({ role: "assistant", content: assistantMessage });
-
-                            this.sendToDiscord('Assistant', assistantMessage); // Kirim pesan Assistant ke Discord Webhook
-
-                        } else if (this.containsKeyword(userMessage.content, keywords)) {
-
-                            const assistantMessage = "Saya dibuat oleh Raya Fadilla Azhar.";
-
-                            this.messages.push({ role: "assistant", content: assistantMessage });
-
-                            this.sendToDiscord('Assistant', assistantMessage); // Kirim pesan Assistant ke Discord Webhook
-
-                        } else {
-
-                            const data = await generateText(this.messages);
-
-                            this.typing = false;
-
-                            this.messages.push({ role: "assistant", content: this.cleanUpLinks(data) });
-
-                            this.sendToDiscord('Assistant', data); // Kirim pesan Assistant ke Discord Webhook
-
-                        }
-
-
+                        const data = await generateText(this.messages);
 
                         this.typing = false;
-
+                        this.messages.push({ role: "assistant", content: this.cleanUpLinks(data) });
+                        this.sendToDiscord('Assistant', data);
                     }
-
                 },
 
-
-
-                cleanUpLinks(message) {
-
-                    return message.replace(/(https?:\/\/[^\s]+)\s+/g, '$1').replace(/\s+(com|org|net|id|co)/g, '$1');
-
+                handleFileUpload(event) {
+                    this.files = Array.from(event.target.files);
                 },
 
-
-
-                formatMessageContent(content) {
-
-                    return content.replace(/\n/g, '<br>').replace(/(\d\.\s)/g, '<ul><li>$1</li></ul>');
-
-                },
-
-
-
-                containsKeyword(message, keywords) {
-
-                    const lowercaseMessage = message.toLowerCase();
-
-                    return keywords.some(keyword => lowercaseMessage.includes(keyword));
-
-                },
-
-
-
-                containsExclusion(message, exclusionKeywords) {
-
-                    const lowercaseMessage = message.toLowerCase();
-
-                    return exclusionKeywords.some(keyword => lowercaseMessage.includes(keyword));
-
-                },
-
-
-
-                copyToClipboard(content) {
-
-                    if (!navigator.clipboard) {
-
-                        const el = document.createElement('textarea');
-
-                        el.value = content;
-
-                        document.body.appendChild(el);
-
-                        el.select();
-
-                        document.execCommand('copy');
-
-                        document.body.removeChild(el);
-
-                        alert('Pesan berhasil disalin menggunakan metode fallback!');
-
-                    } else {
-
-                        navigator.clipboard.writeText(content)
-
-                            .then(() => alert('Pesan berhasil disalin!'))
-
-                            .catch(err => console.error('Gagal menyalin teks: ', err));
-
-                    }
-
-                },
-
-
-
-                // Fungsi untuk mengirim pesan ke Discord Webhook
-
-                async sendToDiscord(role, content) {
-
-                    const webhookURL = 'https://discord.com/api/webhooks/1217243267859480576/PL1j6NAx9_Puug3h2z-TcUPHjPu45XG0BIhSaSqVhVtUd6Kncq3__qvjFSBn_aXGiVHl'; // Ganti dengan URL Webhook Discord-mu
-
-
-
-                    const message = {
-
-                        username: role,
-
-                        content: content,
-
-                    };
-
-
+                async sendFilesToServer(files) {
+                    const formData = new FormData();
+                    files.forEach((file, index) => {
+                        formData.append(`file${index}`, file);
+                    });
 
                     try {
-
-                        await fetch(webhookURL, {
-
+                        await fetch('YOUR_FILE_UPLOAD_ENDPOINT', {
                             method: 'POST',
-
-                            headers: {
-
-                                'Content-Type': 'application/json',
-
-                            },
-
-                            body: JSON.stringify(message),
-
+                            body: formData
                         });
-
-                        console.log('Pesan terkirim ke Discord');
-
+                        console.log('File berhasil diunggah');
                     } catch (error) {
-
-                        console.error('Gagal mengirim pesan ke Discord:', error);
-
+                        console.error('Gagal mengunggah file:', error);
                     }
+                },
 
+                cleanUpLinks(message) {
+                    return message.replace(/(https?:\/\/[^\s]+)\s+/g, '$1').replace(/\s+(com|org|net|id|co)/g, '$1');
+                },
+
+                formatMessageContent(content) {
+                    return content.replace(/\n/g, '<br>').replace(/(\d\.\s)/g, '<ul><li>$1</li></ul>');
+                },
+
+                copyToClipboard(content) {
+                    if (!navigator.clipboard) {
+                        const el = document.createElement('textarea');
+                        el.value = content;
+                        document.body.appendChild(el);
+                        el.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(el);
+                        alert('Pesan berhasil disalin menggunakan metode fallback!');
+                    } else {
+                        navigator.clipboard.writeText(content)
+                            .then(() => alert('Pesan berhasil disalin!'))
+                            .catch(err => console.error('Gagal menyalin teks: ', err));
+                    }
+                },
+
+                async sendToDiscord(role, content) {
+                    const webhookURL = 'https://discord.com/api/webhooks/1217243267859480576/PL1j6NAx9_Puug3h2z-TcUPHjPu45XG0BIhSaSqVhVtUd6Kncq3__qvjFSBn_aXGiVHl';
+                    const message = {
+                        username: role,
+                        content: content,
+                    };
+
+                    try {
+                        await fetch(webhookURL, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(message),
+                        });
+                        console.log('Pesan terkirim ke Discord');
+                    } catch (error) {
+                        console.error('Gagal mengirim pesan ke Discord:', error);
+                    }
                 }
-
             }
-
         });
 
-
-
         async function generateText(messages) {
-
             const { HfInference } = await import('https://esm.sh/@huggingface/inference');
-
             const hf = new HfInference('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');
-
-
-
             const response = await hf.chatCompletion({
-
                 model: "mistralai/Mixtral-8x7B-Instruct-v0.1",
-
                 messages: messages,
-
                 max_tokens: 500,
-
                 temperature: 0.3,
-
                 seed: 0,
-
             });
-
-
-
             return response.choices[0].message.content;
-
         }
-
     </script>
-
-
-
 </body>
-
-
 
 </html>
