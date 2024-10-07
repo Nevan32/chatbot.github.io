@@ -1,8 +1,6 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 
 <html lang="en">
-
-
 
 <head>
 
@@ -152,11 +150,7 @@
 
 <body>
 
-
-
     <div id="app" class="container mx-auto p-4 flex flex-col h-full">
-
-
 
         <h1 class="text-3xl font-bold mb-4 text-center">AI Chatbot Sederhana</h1>
 
@@ -202,8 +196,6 @@
 
         </div>
 
-
-
     </div>
 
 
@@ -222,7 +214,7 @@
 
                 typing: false,
 
-                firstInteraction: true, // Flag untuk mendeteksi interaksi pertama
+                firstInteraction: true,
 
             },
 
@@ -238,7 +230,7 @@
 
                         this.messages.push(userMessage);
 
-
+                        
 
                         // Kirim pesan user ke Discord Webhook
 
@@ -252,7 +244,7 @@
 
                         if (this.firstInteraction) {
 
-                            const welcomeMessage = "Halo Selamat Datang di website ChatGPT versi buatan Raya, Website Ai ini diciptakan oleh Raya Fadilla Azhar, Jika terjadi bug atau ada saran & pertanyaan silahkan Pencet Tombol 'LAPORKAN BUG/SARAN/PERTANYAAN DISINI' Atau WhatsApp Saya jika anda punya nomor saya, Website ini ter-inspirasi oleh ChatGPT https://chatgpt.com/ itu aja, terima kasih, selamat menggunakan website ai ini ya.";
+                            const welcomeMessage = "Halo Selamat Datang di website ChatGPT versi buatan Raya, Website Ai ini diciptakan oleh Raya Fadilla Azhar, Jika terjadi bug atau ada saran & pertanyaan silahkan Pencet Tombol 'LAPORKAN BUG/SARAN/PERTANYAAN DISINI'. Terima kasih, selamat menggunakan website ai ini ya.";
 
                             this.messages.push({ role: "assistant", content: welcomeMessage });
 
@@ -260,7 +252,7 @@
 
                             this.typing = false;
 
-                            this.sendToDiscord('Assistant', welcomeMessage); // Kirim pesan Assistant ke Discord Webhook
+                            this.sendToDiscord('Assistant', welcomeMessage);
 
                             return;
 
@@ -268,41 +260,15 @@
 
 
 
-                        const keywords = ['siapa yang menciptakan anda', 'pencipta anda'];
+                        // Hapus pemeriksaan keyword dan panggil API langsung untuk menghasilkan balasan
 
-                        const exclusionKeywords = ['tuhan', 'alam semesta'];
+                        const data = await generateText(this.messages);
 
+                        this.typing = false;
 
+                        this.messages.push({ role: "assistant", content: this.cleanUpLinks(data) });
 
-                        if (this.containsExclusion(userMessage.content, exclusionKeywords)) {
-
-                            const assistantMessage = "Maaf, saya tidak dapat memberikan jawaban terkait pertanyaan ini.";
-
-                            this.messages.push({ role: "assistant", content: assistantMessage });
-
-                            this.sendToDiscord('Assistant', assistantMessage); // Kirim pesan Assistant ke Discord Webhook
-
-                        } else if (this.containsKeyword(userMessage.content, keywords)) {
-
-                            const assistantMessage = "Saya dibuat oleh Raya Fadilla Azhar.";
-
-                            this.messages.push({ role: "assistant", content: assistantMessage });
-
-                            this.sendToDiscord('Assistant', assistantMessage); // Kirim pesan Assistant ke Discord Webhook
-
-                        } else {
-
-                            const data = await generateText(this.messages);
-
-                            this.typing = false;
-
-                            this.messages.push({ role: "assistant", content: this.cleanUpLinks(data) });
-
-                            this.sendToDiscord('Assistant', data); // Kirim pesan Assistant ke Discord Webhook
-
-                        }
-
-
+                        this.sendToDiscord('Assistant', data); // Kirim pesan Assistant ke Discord Webhook
 
                         this.typing = false;
 
@@ -323,26 +289,6 @@
                 formatMessageContent(content) {
 
                     return content.replace(/\n/g, '<br>').replace(/(\d\.\s)/g, '<ul><li>$1</li></ul>');
-
-                },
-
-
-
-                containsKeyword(message, keywords) {
-
-                    const lowercaseMessage = message.toLowerCase();
-
-                    return keywords.some(keyword => lowercaseMessage.includes(keyword));
-
-                },
-
-
-
-                containsExclusion(message, exclusionKeywords) {
-
-                    const lowercaseMessage = message.toLowerCase();
-
-                    return exclusionKeywords.some(keyword => lowercaseMessage.includes(keyword));
 
                 },
 
@@ -380,11 +326,9 @@
 
 
 
-                // Fungsi untuk mengirim pesan ke Discord Webhook
-
                 async sendToDiscord(role, content) {
 
-                    const webhookURL = 'https://discord.com/api/webhooks/1217243267859480576/PL1j6NAx9_Puug3h2z-TcUPHjPu45XG0BIhSaSqVhVtUd6Kncq3__qvjFSBn_aXGiVHl'; // Ganti dengan URL Webhook Discord-mu
+                    const webhookURL = 'https://discord.com/api/webhooks/1217243267859480576/PL1j6NAx9_Puug3h2z-TcUPHjPu45XG0BIhSaSqVhVtUd6Kncq3__qvjFSBn_aXGiVHl';
 
                     const message = {
 
@@ -393,8 +337,6 @@
                         content: content,
 
                     };
-
-
 
                     try {
 
@@ -458,10 +400,6 @@
 
     </script>
 
-
-
 </body>
-
-
 
 </html>
