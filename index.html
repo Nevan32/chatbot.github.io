@@ -257,27 +257,7 @@
                         this.sendToDiscord('User', userMessage.content);
 
                         this.typing = true;
-
-
-
-                        if (this.firstInteraction) {
-
-                            const welcomeMessage = "Halo Selamat Datang di website ChatGPT versi buatan Raya, Website Ai ini diciptakan oleh Raya Fadilla Azhar, Jika terjadi bug atau ada saran & pertanyaan silahkan Pencet Tombol 'LAPORKAN BUG/SARAN/PERTANYAAN DISINI' atau WhatsApp saya kalau anda punya nomor saya. Terima kasih, selamat menggunakan website ai ini ya.";
-
-                            this.messages.push({ role: "assistant", content: welcomeMessage });
-
-                            this.firstInteraction = false;
-
-                            this.typing = false;
-
-                            this.saveChatHistory(); // Simpan chat setelah pesan selamat datang
-
-                            this.sendToDiscord('Assistant', welcomeMessage);
-
-                            return;
-
-                        }
-
+                        
 
 
                         const data = await generateText(this.messages);
