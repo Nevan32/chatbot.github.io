@@ -166,8 +166,6 @@
 
 
 
-        <!-- Tombol untuk memulai chat baru -->
-
         <div class="mb-4 text-left">
 
             <button @click="clearChat" class="btn bg-blue-400 hover:bg-blue-500 text-white">Clear Chat</button>
@@ -204,8 +202,6 @@
 
 
 
-        <!-- Area input pesan -->
-
         <div class="input-area flex items-center">
 
             <input type="text" v-model="inputMessage" @keyup.enter="sendMessage" placeholder="Ketik pesan..." class="input input-bordered w-full mr-2" />
@@ -222,8 +218,6 @@
 
 
 
-    <!-- Tambahan paragraf di bawah chatbot -->
-
     <p class="text-center mt-4">Dibuat oleh Raya Fadilla Azhar</p>
 
 
@@ -238,7 +232,7 @@
 
                 inputMessage: '',
 
-                messages: JSON.parse(localStorage.getItem('chatHistory')) || [], // Ambil chat dari localStorage
+                messages: JSON.parse(localStorage.getItem('chatHistory')) || [], 
 
                 typing: false,
 
@@ -258,7 +252,7 @@
 
                         this.messages.push(userMessage);
 
-                        this.saveChatHistory(); // Simpan chat setiap kali ada pesan baru
+                        this.saveChatHistory();
 
 
 
@@ -274,7 +268,7 @@
 
                         this.messages.push({ role: "assistant", content: this.cleanUpLinks(data) });
 
-                        this.saveChatHistory(); // Simpan chat setelah balasan dari asisten
+                        this.saveChatHistory();
 
                         this.sendToDiscord('Assistant', data);
 
@@ -282,13 +276,17 @@
 
                 },
 
+
+
                 clearChat() {
 
                     this.messages = [];
 
-                    this.saveChatHistory(); // Hapus riwayat dari localStorage
+                    this.saveChatHistory(); 
 
                 },
+
+
 
                 saveChatHistory() {
 
@@ -296,17 +294,33 @@
 
                 },
 
+
+
                 cleanUpLinks(message) {
 
                     return message.replace(/(https?:\/\/[^\s]+)\s+/g, '$1').replace(/\s+(com|org|net|id|co)/g, '$1');
 
                 },
 
+
+
                 formatMessageContent(content) {
 
-                    return content.replace(/\n/g, '<br>').replace(/(\d\.\s)/g, '<ul><li>$1</li></ul>');
+                    // Mengganti tanda ** di awal dan akhir teks dengan tag <strong> untuk teks tebal
+
+                    content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+                    // Mengganti newlines dengan tag <br>
+
+                    content = content.replace(/\n/g, '<br>');
+
+                    // Mengganti angka 1., 2., dst. dengan list item
+
+                    return content.replace(/(\d\.\s)/g, '<ul><li>$1</li></ul>');
 
                 },
+
+
 
                 copyToClipboard(content) {
 
@@ -337,6 +351,8 @@
                     }
 
                 },
+
+
 
                 async sendToDiscord(role, content) {
 
@@ -377,6 +393,8 @@
                 }
 
             },
+
+
 
             mounted() {
 
