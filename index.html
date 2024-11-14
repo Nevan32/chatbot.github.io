@@ -16,8 +16,6 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
 
-
-
     <style>
 
         body {
@@ -35,8 +33,6 @@
             flex-direction: column;
 
         }
-
-
 
         .chat-container {
 
@@ -56,15 +52,11 @@
 
         }
 
-
-
         .input-area {
 
             margin-top: 20px;
 
         }
-
-
 
         .chat-bubble {
 
@@ -76,8 +68,6 @@
 
         }
 
-
-
         .chat-bubble-primary {
 
             background-color: transparent;
@@ -86,8 +76,6 @@
 
         }
 
-
-
         .chat-bubble-secondary {
 
             background-color: transparent;
@@ -95,8 +83,6 @@
             color: black;
 
         }
-
-
 
         .copy-button {
 
@@ -108,15 +94,11 @@
 
         }
 
-
-
         .copy-button:hover {
 
             text-decoration: underline;
 
         }
-
-
 
         .message-content p {
 
@@ -124,21 +106,69 @@
 
         }
 
-
-
         .message-content ul {
 
             margin-left: 20px;
 
         }
 
-
-
         .message-role {
 
             font-weight: bold;
 
             margin-bottom: 5px;
+
+        }
+
+        /* Animasi untuk tulisan berkedip */
+
+        .typing-indicator {
+
+            display: inline-flex;
+
+            gap: 4px;
+
+        }
+
+        .dot {
+
+            width: 8px;
+
+            height: 8px;
+
+            background-color: #6b7280; /* warna abu-abu */
+
+            border-radius: 50%;
+
+            animation: blink 1s infinite alternate;
+
+        }
+
+        .dot:nth-child(2) {
+
+            animation-delay: 0.2s;
+
+        }
+
+        .dot:nth-child(3) {
+
+            animation-delay: 0.4s;
+
+        }
+
+        @keyframes blink {
+
+            0% {
+
+                opacity: 0.2;
+
+            }
+
+            100% {
+
+                opacity: 1;
+
+            }
 
         }
 
@@ -152,8 +182,6 @@
 
         <h1 class="text-3xl font-bold mb-4 text-center">AI Chatbot Sederhana</h1>
 
-
-
         <div class="text-center mb-4">
 
             <a href="https://nevan32.github.io/chatbotforlaporanbugorsaran.github.io/" target="_blank">
@@ -164,15 +192,11 @@
 
         </div>
 
-
-
         <div class="mb-4 text-left">
 
             <button @click="clearChat" class="btn bg-blue-400 hover:bg-blue-500 text-white">Clear Chat</button>
 
         </div>
-
-
 
         <div class="chat-container mb-4">
 
@@ -188,19 +212,23 @@
 
                 <div class="message-content" v-html="formatMessageContent(message.content)"></div>
 
-
-
                 <button @click="copyToClipboard(message.content)" class="btn bg-blue-500 hover:bg-blue-700 text-white mt-2">SALIN PESAN INI</button>
 
             </div>
 
+            <div v-if="typing" class="text-gray-500 italic typing-indicator">
 
+                
 
-            <div v-if="typing" class="text-gray-500 italic">assistant sedang mengetik...</div>
+                <span class="dot"></span>
+
+                <span class="dot"></span>
+
+                <span class="dot"></span>
+
+            </div>
 
         </div>
-
-
 
         <div class="input-area flex items-center">
 
@@ -216,11 +244,7 @@
 
     </div>
 
-
-
     <p class="text-center mt-4">Dibuat oleh Raya Fadilla Azhar</p>
-
-
 
     <script type="module">
 
@@ -254,13 +278,9 @@
 
                         this.saveChatHistory();
 
-
-
                         this.sendToDiscord('User', userMessage.content);
 
                         this.typing = true;
-
-
 
                         const data = await generateText(this.messages);
 
@@ -276,8 +296,6 @@
 
                 },
 
-
-
                 clearChat() {
 
                     this.messages = [];
@@ -286,15 +304,11 @@
 
                 },
 
-
-
                 saveChatHistory() {
 
                     localStorage.setItem('chatHistory', JSON.stringify(this.messages));
 
                 },
-
-
 
                 cleanUpLinks(message) {
 
@@ -302,25 +316,15 @@
 
                 },
 
-
-
                 formatMessageContent(content) {
-
-                    // Mengganti tanda ** di awal dan akhir teks dengan tag <strong> untuk teks tebal
 
                     content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
 
-                    // Mengganti newlines dengan tag <br>
-
                     content = content.replace(/\n/g, '<br>');
-
-                    // Mengganti angka 1., 2., dst. dengan list item
 
                     return content.replace(/(\d\.\s)/g, '<ul><li>$1</li></ul>');
 
                 },
-
-
 
                 copyToClipboard(content) {
 
@@ -352,19 +356,11 @@
 
                 },
 
-
-
                 async sendToDiscord(role, content) {
 
                     const webhookURL = 'https://discord.com/api/webhooks/1217243267859480576/PL1j6NAx9_Puug3h2z-TcUPHjPu45XG0BIhSaSqVhVtUd6Kncq3__qvjFSBn_aXGiVHl';
 
-                    const message = {
-
-                        username: role,
-
-                        content: content,
-
-                    };
+                    const message = { username: role, content: content };
 
                     try {
 
@@ -372,11 +368,7 @@
 
                             method: 'POST',
 
-                            headers: {
-
-                                'Content-Type': 'application/json',
-
-                            },
+                            headers: { 'Content-Type': 'application/json' },
 
                             body: JSON.stringify(message),
 
@@ -394,8 +386,6 @@
 
             },
 
-
-
             mounted() {
 
                 if (this.messages.length === 0) {
@@ -408,15 +398,11 @@
 
         });
 
-
-
         async function generateText(messages) {
 
             const { HfInference } = await import('https://esm.sh/@huggingface/inference');
 
             const hf = new HfInference('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');
-
-
 
             const response = await hf.chatCompletion({
 
@@ -431,8 +417,6 @@
                 seed: 0,
 
             });
-
-
 
             return response.choices[0].message.content;
 
