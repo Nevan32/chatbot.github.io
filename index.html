@@ -1,429 +1,268 @@
 <!DOCTYPE html>
-
 <html lang="en">
-
 <head>
-
-    <meta charset="UTF-8">
-
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>AI Chatbot Sederhana</title>
-
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@3.9.4/dist/full.css" rel="stylesheet" type="text/css" />
-
-    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
-
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <style>
-
-        body {
-
-            background-color: #f8fafc;
-
-            font-family: 'Arial', sans-serif;
-
-            margin: 0;
-
-            height: 100vh;
-
-            display: flex;
-
-            flex-direction: column;
-
-        }
-
-        .chat-container {
-
-            background: white;
-
-            border-radius: 10px;
-
-            padding: 20px;
-
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-
-            flex: 1;
-
-            overflow-y: auto;
-
-            margin-bottom: 20px;
-
-        }
-
-        .input-area {
-
-            margin-top: 20px;
-
-        }
-
-        .chat-bubble {
-
-            margin-bottom: 10px;
-
-            padding: 10px;
-
-            border-radius: 10px;
-
-        }
-
-        .chat-bubble-primary {
-
-            background-color: transparent;
-
-            color: black;
-
-        }
-
-        .chat-bubble-secondary {
-
-            background-color: transparent;
-
-            color: black;
-
-        }
-
-        .copy-button {
-
-            color: blue;
-
-            text-decoration: none;
-
-            cursor: pointer;
-
-        }
-
-        .copy-button:hover {
-
-            text-decoration: underline;
-
-        }
-
-        .message-content p {
-
-            margin-bottom: 0.5em;
-
-        }
-
-        .message-content ul {
-
-            margin-left: 20px;
-
-        }
-
-        .message-role {
-
-            font-weight: bold;
-
-            margin-bottom: 5px;
-
-        }
-
-        /* Animasi untuk tulisan berkedip */
-
-        .typing-indicator {
-
-            display: inline-flex;
-
-            gap: 4px;
-
-        }
-
-        .dot {
-
-            width: 8px;
-
-            height: 8px;
-
-            background-color: #6b7280; /* warna abu-abu */
-
-            border-radius: 50%;
-
-            animation: blink 1s infinite alternate;
-
-        }
-
-        .dot:nth-child(2) {
-
-            animation-delay: 0.2s;
-
-        }
-
-        .dot:nth-child(3) {
-
-            animation-delay: 0.4s;
-
-        }
-
-        @keyframes blink {
-
-            0% {
-
-                opacity: 0.2;
-
-            }
-
-            100% {
-
-                opacity: 1;
-
-            }
-
-        }
-
-    </style>
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Chatbot Sederhana</title>
+  <!-- DaisyUI dan Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@3.9.4/dist/full.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Library untuk Markdown dan sanitasi HTML -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
+  <style>
+    body {
+      background-color: #f8fafc;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .chat-container {
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      flex: 1;
+      overflow-y: auto;
+      margin-bottom: 20px;
+    }
+    .input-area {
+      margin-top: 20px;
+    }
+    .chat-bubble {
+      margin-bottom: 10px;
+      padding: 10px;
+      border-radius: 10px;
+    }
+    /* Gaya untuk pesan user dan assistant */
+    .chat-bubble-primary {
+      background-color: #d1e7ff; /* biru muda */
+      color: black;
+    }
+    .chat-bubble-secondary {
+      background-color: #f0f0f0; /* abu–abu muda */
+      color: black;
+    }
+    .copy-button {
+      color: blue;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .copy-button:hover {
+      text-decoration: underline;
+    }
+    .message-content p {
+      margin-bottom: 0.5em;
+    }
+    .message-content ul {
+      margin-left: 20px;
+    }
+    /* Tambahan style untuk ordered list agar nomor terlihat */
+    .message-content ol {
+      list-style-type: decimal;
+      padding-left: 1.5rem;
+      margin-bottom: 0.5em;
+    }
+    .message-content li {
+      margin-bottom: 0.5em;
+    }
+    .message-role {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    /* Animasi untuk indikator “mengetik” */
+    .typing-indicator {
+      display: inline-flex;
+      gap: 4px;
+    }
+    .dot {
+      width: 8px;
+      height: 8px;
+      background-color: #6b7280;
+      border-radius: 50%;
+      animation: blink 1s infinite alternate;
+    }
+    .dot:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+    .dot:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+    @keyframes blink {
+      0% { opacity: 0.2; }
+      100% { opacity: 1; }
+    }
+  </style>
 </head>
-
 <body>
-
-    <div id="app" class="container mx-auto p-4 flex flex-col h-full">
-
-        <h1 class="text-3xl font-bold mb-4 text-center">AI Chatbot Sederhana</h1>
-
-        <div class="text-center mb-4">
-
-            <a href="https://nevan32.github.io/chatbotforlaporanbugorsaran.github.io/" target="_blank">
-
-                <button class="btn bg-green-500 hover:bg-green-700 text-white">Laporkan Bug/Saran/Pertanyaan Disini</button>
-
-            </a>
-
-        </div>
-
-        <div class="mb-4 text-left">
-
-            <button @click="clearChat" class="btn bg-blue-400 hover:bg-blue-500 text-white">Clear Chat</button>
-
-        </div>
-
-        <div class="chat-container mb-4">
-
-            <div class="chat chat-start" v-for="(message, index) in messages" :key="index" :class="['chat-bubble', message.role === 'user' ? 'chat-bubble-primary' : 'chat-bubble-secondary']">
-
-                <div class="flex items-center mb-2">
-
-                    <img :src="message.role === 'user' ? 'https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png' : 'https://upload.wikimedia.org/wikipedia/commons/e/ef/ChatGPT-Logo.svg'" alt="User or Assistant Icon" class="w-8 h-8 mr-2">
-
-                    <div class="message-role">{{ message.role === 'user' ? 'User' : 'Assistant' }}</div>
-
-                </div>
-
-                <div class="message-content" v-html="formatMessageContent(message.content)"></div>
-
-                <button @click="copyToClipboard(message.content)" class="btn bg-blue-500 hover:bg-blue-700 text-white mt-2">SALIN PESAN INI</button>
-
-            </div>
-
-            <div v-if="typing" class="text-gray-500 italic typing-indicator">
-
-                
-
-                <span class="dot"></span>
-
-                <span class="dot"></span>
-
-                <span class="dot"></span>
-
-            </div>
-
-        </div>
-
-        <div class="input-area flex items-center">
-
-            <input type="text" v-model="inputMessage" @keyup.enter="sendMessage" placeholder="Ketik pesan..." class="input input-bordered w-full mr-2" />
-
-            <button @click="sendMessage" class="btn p-0" style="background: none; border: none;">
-
-                <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhTi6NNzaNW2TmRd3yJfsqPnq_79qZpPX7oYZrtoM3NxXlcbbY7cBPjmXxpYbSMKfkDq1oFrfL-QdN6OqL_XermC91jdTpUHgTMjL9O3lOF0yXlksrl2mhdFxqe0hbwgH2bfVfwg0Ae9HEQ6ebfdaukrLKXUyKuhyT0XZPjrG8X6-dRQDhhwY1D_q5qTjk/s512/60525.png" alt="Send" class="w-10 h-10" />
-
-            </button>
-
-        </div>
-
+  <div id="app" class="container mx-auto p-4 flex flex-col h-full">
+    <h1 class="text-3xl font-bold mb-4 text-center">AI Chatbot Sederhana</h1>
+    <div class="text-center mb-4">
+      <a href="https://nevan32.github.io/chatbotforlaporanbugorsaran.github.io/" target="_blank">
+        <button class="btn bg-green-500 hover:bg-green-700 text-white">Laporkan Bug/Saran/Pertanyaan Disini</button>
+      </a>
     </div>
-
-    <p class="text-center mt-4">Dibuat oleh Raya Fadilla Azhar</p>
-
-    <script type="module">
-
-        new Vue({
-
-            el: '#app',
-
-            data: {
-
-                inputMessage: '',
-
-                messages: JSON.parse(localStorage.getItem('chatHistory')) || [], 
-
-                typing: false,
-
-                firstInteraction: true,
-
-            },
-
-            methods: {
-
-                async sendMessage() {
-
-                    if (this.inputMessage.trim() !== '') {
-
-                        const userMessage = { role: "user", content: this.cleanUpLinks(this.inputMessage) };
-
-                        this.inputMessage = '';
-
-                        this.messages.push(userMessage);
-
-                        this.saveChatHistory();
-
-                        this.sendToDiscord('User', userMessage.content);
-
-                        this.typing = true;
-
-                        const data = await generateText(this.messages);
-
-                        this.typing = false;
-
-                        this.messages.push({ role: "assistant", content: this.cleanUpLinks(data) });
-
-                        this.saveChatHistory();
-
-                        this.sendToDiscord('Assistant', data);
-
-                    }
-
-                },
-
-                clearChat() {
-
-                    this.messages = [];
-
-                    this.saveChatHistory(); 
-
-                },
-
-                saveChatHistory() {
-
-                    localStorage.setItem('chatHistory', JSON.stringify(this.messages));
-
-                },
-
-                cleanUpLinks(message) {
-
-                    return message.replace(/(https?:\/\/[^\s]+)\s+/g, '$1').replace(/\s+(com|org|net|id|co)/g, '$1');
-
-                },
-
-                formatMessageContent(content) {
-
-                    content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-
-                    content = content.replace(/\n/g, '<br>');
-
-                    return content.replace(/(\d\.\s)/g, '<ul><li>$1</li></ul>');
-
-                },
-
-                copyToClipboard(content) {
-
-                    if (!navigator.clipboard) {
-
-                        const el = document.createElement('textarea');
-
-                        el.value = content;
-
-                        document.body.appendChild(el);
-
-                        el.select();
-
-                        document.execCommand('copy');
-
-                        document.body.removeChild(el);
-
-                        alert('Pesan berhasil disalin menggunakan metode fallback!');
-
-                    } else {
-
-                        navigator.clipboard.writeText(content)
-
-                            .then(() => alert('Pesan berhasil disalin!'))
-
-                            .catch(err => console.error('Gagal menyalin teks: ', err));
-
-                    }
-
-                },
-
-                async sendToDiscord(role, content) {
-
-                    const webhookURL = 'https://discord.com/api/webhooks/1217243267859480576/PL1j6NAx9_Puug3h2z-TcUPHjPu45XG0BIhSaSqVhVtUd6Kncq3__qvjFSBn_aXGiVHl';
-
-                    const message = { username: role, content: content };
-
-                    try {
-
-                        await fetch(webhookURL, {
-
-                            method: 'POST',
-
-                            headers: { 'Content-Type': 'application/json' },
-
-                            body: JSON.stringify(message),
-
-                        });
-
-                        console.log('Pesan terkirim ke Discord');
-
-                    } catch (error) {
-
-                        console.error('Gagal mengirim pesan ke Discord:', error);
-
-                    }
-
-                }
-
-            },
-
-            mounted() {
-
-                if (this.messages.length === 0) {
-
-                    this.firstInteraction = true;
-
-                }
-
+    <div class="mb-4 text-left">
+      <button @click="confirmClearChat" class="btn bg-blue-400 hover:bg-blue-500 text-white">Clear Chat</button>
+    </div>
+    <div ref="chatContainer" class="chat-container mb-4">
+      <div v-for="(message, index) in messages" :key="index" :class="['chat-bubble', message.role === 'user' ? 'chat-bubble-primary' : 'chat-bubble-secondary']">
+        <div class="flex items-center mb-2">
+          <img :src="message.role === 'user' 
+                      ? 'https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png' 
+                      : 'https://upload.wikimedia.org/wikipedia/commons/e/ef/ChatGPT-Logo.svg'" 
+               alt="Icon" class="w-8 h-8 mr-2" />
+          <div class="message-role">{{ message.role === 'user' ? 'User' : 'Assistant' }}</div>
+        </div>
+        <div class="message-content" v-html="formatMessageContent(message.content)"></div>
+        <button @click="copyToClipboard(message.content)" class="btn bg-blue-500 hover:bg-blue-700 text-white mt-2">
+          SALIN PESAN INI
+        </button>
+      </div>
+      <div v-if="typing" class="text-gray-500 italic typing-indicator">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+    </div>
+    <div class="input-area flex items-center">
+      <input type="text" 
+             v-model="inputMessage" 
+             @keyup.enter="sendMessage" 
+             :disabled="isLoading" 
+             placeholder="Ketik pesan..." 
+             class="input input-bordered w-full mr-2" 
+             autofocus />
+      <button @click="sendMessage" :disabled="isLoading" class="btn">
+        <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhTi6NNzaNW2TmRd3yJfsqPnq_79qZpPX7oYZrtoM3NxXlcbbY7cBPjmXxpYbSMKfkDq1oFrfL-QdN6OqL_XermC91jdTpUHgTMjL9O3lOF0yXlksrl2mhdFxqe0hbwgH2bfVfwg0Ae9HEQ6ebfdaukrLKXUyKuhyT0XZPjrG8X6-dRQDhhwY1D_q5qTjk/s512/60525.png" alt="Send" class="w-10 h-10" />
+      </button>
+    </div>
+  </div>
+  <p class="text-center mt-4">Dibuat oleh Raya Fadilla Azhar</p>
+
+  <script type="module">
+    new Vue({
+      el: '#app',
+      data: {
+        inputMessage: '',
+        messages: JSON.parse(localStorage.getItem('chatHistory')) || [],
+        typing: false,
+        isLoading: false
+      },
+      methods: {
+        async sendMessage() {
+          if (this.inputMessage.trim() === '' || this.isLoading) return;
+          
+          const userMessage = { role: "user", content: this.inputMessage.trim() };
+          this.messages.push(userMessage);
+          this.saveChatHistory();
+          this.sendToDiscord('User', userMessage.content);
+          
+          this.inputMessage = '';
+          this.typing = true;
+          this.isLoading = true;
+          this.autoScroll();
+
+          try {
+            const responseText = await generateText(this.messages);
+            this.messages.push({ role: "assistant", content: responseText });
+            this.sendToDiscord('Assistant', responseText);
+          } catch (error) {
+            console.error('Error generating text:', error);
+            const errorMessage = 'Maaf, terjadi kesalahan saat memproses permintaan Anda.';
+            this.messages.push({ role: "assistant", content: errorMessage });
+          } finally {
+            this.typing = false;
+            this.isLoading = false;
+            this.saveChatHistory();
+            this.autoScroll();
+          }
+        },
+        confirmClearChat() {
+          if (confirm('Apakah Anda yakin ingin menghapus riwayat chat?')) {
+            this.messages = [];
+            this.saveChatHistory();
+          }
+        },
+        saveChatHistory() {
+          localStorage.setItem('chatHistory', JSON.stringify(this.messages));
+        },
+        autoScroll() {
+          this.$nextTick(() => {
+            if (this.$refs.chatContainer) {
+              this.$refs.chatContainer.scrollTop = this.$refs.chatContainer.scrollHeight;
             }
-
-        });
-
-        async function generateText(messages) {
-
-            const { HfInference } = await import('https://esm.sh/@huggingface/inference');
-
-            const hf = new HfInference('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');
-
-            const response = await hf.chatCompletion({
-
-                model: "mistralai/Mixtral-8x7B-Instruct-v0.1",
-
-                messages: messages,
-
-                max_tokens: 500,
-
-                temperature: 0.3,
-
-                seed: 0,
-
+          });
+        },
+        formatMessageContent(content) {
+          const html = marked.parse(content);
+          return DOMPurify.sanitize(html);
+        },
+        copyToClipboard(content) {
+          if (!navigator.clipboard) {
+            const el = document.createElement('textarea');
+            el.value = content;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            alert('Pesan berhasil disalin menggunakan metode fallback!');
+          } else {
+            navigator.clipboard.writeText(content)
+              .then(() => alert('Pesan berhasil disalin!'))
+              .catch(err => console.error('Gagal menyalin teks: ', err));
+          }
+        },
+        async sendToDiscord(role, content) {
+          const webhookURL = 'https://discord.com/api/webhooks/1217243267859480576/PL1j6NAx9_Puug3h2z-TcUPHjPu45XG0BIhSaSqVhVtUd6Kncq3__qvjFSBn_aXGiVHl';
+          const message = { username: role, content: content };
+          try {
+            await fetch(webhookURL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(message),
             });
-
-            return response.choices[0].message.content;
-
+            console.log('Pesan terkirim ke Discord');
+          } catch (error) {
+            console.error('Gagal mengirim pesan ke Discord:', error);
+          }
         }
+      },
+      watch: {
+        messages() {
+          this.$nextTick(() => {
+            if (this.$refs.chatContainer) {
+              this.$refs.chatContainer.scrollTop = this.$refs.chatContainer.scrollHeight;
+            }
+          });
+        }
+      },
+      mounted() {
+        this.autoScroll();
+      }
+    });
 
-    </script>
-
+    async function generateText(messages) {
+      const { HfInference } = await import('https://esm.sh/@huggingface/inference');
+      const hf = new HfInference('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');
+      try {
+        const response = await hf.chatCompletion({
+          model: "mistralai/Mixtral-8x7B-Instruct-v0.1",
+          messages: messages,
+          max_tokens: 500,
+          temperature: 0.3,
+          seed: 0,
+        });
+        return response.choices[0].message.content;
+      } catch (error) {
+        console.error('Error in generateText:', error);
+        throw error;
+      }
+    }
+  </script>
 </body>
-
-</html>
+    </html>
+    
